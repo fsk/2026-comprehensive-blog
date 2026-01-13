@@ -1,0 +1,11 @@
+name: fsk-blog-site
+
+services:
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=blog-db'
+      - 'POSTGRES_PASSWORD=fsk'
+      - 'POSTGRES_USER=fsk'
+    ports:
+      - '6789:5432'
