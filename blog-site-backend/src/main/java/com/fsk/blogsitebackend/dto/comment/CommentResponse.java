@@ -1,4 +1,4 @@
-package com.fsk.blogsitebackend.dto;
+package com.fsk.blogsitebackend.dto.comment;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

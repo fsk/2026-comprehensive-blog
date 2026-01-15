@@ -1,21 +1,21 @@
-package com.fsk.blogsitebackend.dto;
+package com.fsk.blogsitebackend.dto.tag;
+
+import java.util.UUID;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SocialMediaResponse {
+public class TagResponse {
     private UUID id;
     private String name;
-    private String url;
-    private String iconName;
-    private Integer displayOrder;
+    private String slug;
+    private String description;
+    private String hexColorCode;
     private Boolean isActive;
 }

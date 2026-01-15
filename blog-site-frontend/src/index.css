@@ -45,3 +45,68 @@
     animation: blink 1s step-end infinite;
   }
 }
+
+/* Golden Theme Calendar */
+.golden-theme-calendar {
+  @apply font-sans border-0 shadow-2xl rounded-2xl overflow-hidden bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 !important;
+}
+
+.golden-theme-calendar .react-datepicker__header {
+  @apply bg-gradient-to-r from-[#EA580C] to-[#FBBF24] border-b-0 pt-4 pb-2 text-white !important;
+}
+
+.golden-theme-calendar .react-datepicker__current-month,
+.golden-theme-calendar .react-datepicker-time__header,
+.golden-theme-calendar .react-datepicker-year-header {
+  @apply text-white font-bold text-lg mb-2 !important;
+}
+
+.golden-theme-calendar .react-datepicker__navigation-icon::before {
+  @apply border-white border-r-2 border-t-2 !important;
+}
+
+.golden-theme-calendar .react-datepicker__month-container {
+  @apply bg-transparent !important;
+}
+
+.golden-theme-calendar .react-datepicker__day-name,
+.golden-theme-calendar .react-datepicker__day,
+.golden-theme-calendar .react-datepicker__time-name {
+  @apply text-slate-700 dark:text-slate-300 w-10 h-10 leading-10 m-1 rounded-full hover:bg-orange-50 dark:hover:bg-slate-700 transition-all !important;
+}
+
+.golden-theme-calendar .react-datepicker__day--selected,
+.golden-theme-calendar .react-datepicker__day--in-selecting-range,
+.golden-theme-calendar .react-datepicker__day--in-range,
+.golden-theme-calendar .react-datepicker__month-text--selected,
+.golden-theme-calendar .react-datepicker__month-text--in-selecting-range,
+.golden-theme-calendar .react-datepicker__month-text--in-range {
+  @apply bg-[#EA580C] text-white hover:bg-[#c2410c] shadow-lg shadow-orange-500/30 !important;
+}
+
+.golden-theme-calendar .react-datepicker__day--keyboard-selected,
+.golden-theme-calendar .react-datepicker__month-text--keyboard-selected,
+.golden-theme-calendar .react-datepicker__quarter-text--keyboard-selected,
+.golden-theme-calendar .react-datepicker__year-text--keyboard-selected {
+  @apply bg-orange-100 dark:bg-slate-700 text-[#EA580C] dark:text-[#FBBF24] !important;
+}
+
+.golden-theme-calendar .react-datepicker__day--disabled,
+.golden-theme-calendar .react-datepicker__month-text--disabled,
+.golden-theme-calendar .react-datepicker__quarter-text--disabled,
+.golden-theme-calendar .react-datepicker__year-text--disabled {
+  @apply text-slate-300 dark:text-slate-600 cursor-not-allowed hover:bg-transparent !important;
+}
+
+/* Specific for Month Picker view */
+.golden-theme-calendar .react-datepicker__month-wrapper {
+  @apply flex justify-center gap-2 !important;
+}
+
+.golden-theme-calendar .react-datepicker__month-text {
+  @apply py-2 px-3 m-1 rounded-xl transition-all font-semibold !important;
+}
+
+.react-datepicker-popper[data-placement^="bottom"] .react-datepicker__triangle {
+  @apply fill-[#EA580C] text-[#EA580C] stroke-[#EA580C] !important;
+}

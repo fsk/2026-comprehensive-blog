@@ -8,6 +8,8 @@ import Login from './pages/Login';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import SocialMediaAdmin from './pages/SocialMediaAdmin';
+import CreateAnnouncement from './pages/CreateAnnouncement';
+import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 
@@ -26,7 +28,9 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/admin/social-media" element={<SocialMediaAdmin />} />
+            <Route path="/admin/announcement" element={<CreateAnnouncement />} />
           </Routes>
+          <Toaster position="top-right" />
         </Router>
       </ToastProvider>
     </ThemeProvider>

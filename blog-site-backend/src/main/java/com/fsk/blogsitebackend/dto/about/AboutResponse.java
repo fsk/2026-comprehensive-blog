@@ -1,6 +1,8 @@
-package com.fsk.blogsitebackend.dto;
+package com.fsk.blogsitebackend.dto.about;
 
 import java.util.List;
+import java.util.UUID;
+
 import lombok.Data;
 import lombok.Builder;
 
@@ -15,7 +17,7 @@ public class AboutResponse {
     @Data
     @Builder
     public static class EducationResponse {
-        private String id;
+        private UUID id;
         private String institution;
         private String degree;
         private String faculty;
@@ -29,7 +31,7 @@ public class AboutResponse {
     @Data
     @Builder
     public static class ExperienceResponse {
-        private String id;
+        private UUID id;
         private String company;
         private String title;
         private String period;
@@ -42,7 +44,7 @@ public class AboutResponse {
     @Data
     @Builder
     public static class ReferenceResponse {
-        private String id;
+        private UUID id;
         private String name;
         private String currentCompany;
         private String currentTitle;

@@ -8,7 +8,7 @@ import com.fsk.blogsitebackend.service.AssetService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/assets")
+@RequestMapping("/assets")
 @RequiredArgsConstructor
 public class AssetController {
     

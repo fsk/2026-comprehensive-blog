@@ -24,7 +24,7 @@ const TechStack = () => {
             {technologies.map((tech, i) => (
                 <div
                     key={i}
-                    className="group relative flex flex-col items-center gap-3 p-4 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 hover:border-[#EA580C] transition-all duration-300 transform hover:-translate-y-1"
+                    className="group relative flex flex-col items-center gap-3 p-4 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 hover:border-[#EA580C] dark:hover:border-[#EA580C] transition-all duration-300 transform hover:-translate-y-1"
                 >
                     <div className="w-12 h-12 flex items-center justify-center relative">
                         <div className="absolute inset-0 bg-slate-100 dark:bg-slate-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

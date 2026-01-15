@@ -1,4 +1,4 @@
-package com.fsk.blogsitebackend.dto;
+package com.fsk.blogsitebackend.dto.post.postrequest;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,4 +17,5 @@ public class CreatePostRequest {
     private PostStatus status;
     private List<String> tags;
     private UUID authorId;
+    private List<UUID> categoryIds;
 }

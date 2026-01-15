@@ -21,6 +21,7 @@ public class ErrorMessages {
     public static final String POST_NOT_FOUND = "Post not found";
     public static final String POST_NOT_FOUND_WITH_ID = "Post not found with id: %s";
     public static final String POST_NOT_FOUND_WITH_SLUG = "Post not found with slug: %s";
+    public static final String NO_POST_FOUND_WITH_SLUG = "No post found with slug: %s";
     public static final String FAILED_TO_CREATE_POST = "Failed to create post";
     public static final String FAILED_TO_UPDATE_POST = "Failed to update post";
     public static final String FAILED_TO_DELETE_POST = "Failed to delete post";
@@ -83,6 +84,11 @@ public class ErrorMessages {
     public static final String VALIDATION_FAILED = "Data does not meet validation requirements";
     public static final String VALUE_TOO_LONG = "Value exceeds maximum length";
     public static final String DATA_INTEGRITY_DEFAULT = "Data integrity violation occurred";
+
+    // Validation errors
+    public static final String VALIDATION_ERROR = "Validation failed";
+    public static final String REQUIRED_FIELD_MISSING = "Required field is missing";
+    public static final String INVALID_INPUT = "Invalid input provided";
 
     private ErrorMessages() {
         // Utility class - prevent instantiation

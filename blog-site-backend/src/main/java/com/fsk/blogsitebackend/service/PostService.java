@@ -1,6 +1,5 @@
 package com.fsk.blogsitebackend.service;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -18,8 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fsk.blogsitebackend.common.exception.NoUsersFoundException;
 import com.fsk.blogsitebackend.common.exception.ResourceNotFoundException;
 import com.fsk.blogsitebackend.common.exception.SlugAlreadyExistsException;
-import com.fsk.blogsitebackend.dto.CreatePostRequest;
-import com.fsk.blogsitebackend.dto.PostResponse;
+import com.fsk.blogsitebackend.dto.post.postrequest.CreatePostRequest;
+import com.fsk.blogsitebackend.dto.post.PostMapper;
+import com.fsk.blogsitebackend.dto.post.PostResponse;
 import com.fsk.blogsitebackend.entities.PostEntity;
 import com.fsk.blogsitebackend.entities.PostEntity.PostStatus;
 import com.fsk.blogsitebackend.entities.TagEntity;
@@ -27,6 +27,8 @@ import com.fsk.blogsitebackend.entities.User;
 import com.fsk.blogsitebackend.repository.PostRepository;
 import com.fsk.blogsitebackend.repository.TagRepository;
 import com.fsk.blogsitebackend.repository.UserRepository;
+import com.fsk.blogsitebackend.repository.CategoryRepository;
+import com.fsk.blogsitebackend.entities.CategoryEntity;
 
 import lombok.RequiredArgsConstructor;
 
@@ -38,30 +40,17 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final TagRepository tagRepository;
+    private final CategoryRepository categoryRepository;
+    private final PostMapper postMapper;
 
     @Transactional(readOnly = true)
-    public List<PostEntity> findAll() {
-        return postRepository.findAll();
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<PostEntity> findById(UUID id) {
-        return postRepository.findById(id);
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<PostEntity> findBySlug(String slug) {
-        return postRepository.findBySlug(slug);
+    public Optional<PostResponse> findResponseBySlug(String slug) {
+        return postRepository.findBySlug(slug).map(postMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
     public List<PostEntity> findByStatus(PostStatus status) {
         return postRepository.findByStatus(status, Pageable.unpaged()).getContent();
-    }
-
-    @Transactional(readOnly = true)
-    public List<PostEntity> findByAuthorId(UUID authorId) {
-        return postRepository.findByAuthorId(authorId, Pageable.unpaged()).getContent();
     }
 
     public PostEntity save(PostEntity post) {
@@ -78,65 +67,43 @@ public class PostService {
             author = userRepository.findById(request.getAuthorId())
                     .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.getAuthorId()));
         } else {
-            author = userRepository.findAll().stream().findFirst()
-                    .orElseThrow(NoUsersFoundException::new);
+            author = userRepository.findAll().stream().findFirst().orElseThrow(NoUsersFoundException::new);
         }
 
-        PostEntity post = new PostEntity();
-        post.setTitle(request.getTitle());
-        post.setSlug(request.getSlug());
-        post.setContent(request.getContent());
-        post.setExcerpt(request.getExcerpt());
-        post.setFeaturedImage(request.getFeaturedImage());
-        post.setStatus(request.getStatus() != null ? request.getStatus() : PostStatus.DRAFT);
-        post.setAuthor(author);
+        PostEntity post = postMapper.toEntity(request);
+        postMapper.updateAuthor(author, post);
 
         if (post.getStatus() == PostStatus.PUBLISHED) {
-            post.setPublishedAt(LocalDateTime.now());
+            postMapper.updatePublishedAt(java.time.LocalDateTime.now(), post);
         }
 
         // Handle Tags
         if (request.getTags() != null && !request.getTags().isEmpty()) {
-            Set<TagEntity> tagEntities = new HashSet<>();
-            for (String tagName : request.getTags()) {
-                String slug = tagName.toLowerCase().replace(" ", "-");
-                TagEntity tag = tagRepository.findBySlug(slug)
-                        .orElseGet(() -> {
-                            TagEntity newTag = new TagEntity();
-                            newTag.setName(tagName);
-                            newTag.setSlug(slug);
-                            return tagRepository.save(newTag);
-                        });
-                tagEntities.add(tag);
-            }
-            post.setTags(tagEntities);
+            handleTags(request, post);
+        }
+
+        // Handle Categories
+        if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
+            handleCategories(request, post);
         }
 
         PostEntity savedPost = postRepository.save(post);
-        return mapToResponse(savedPost);
+        return postMapper.toResponse(savedPost);
     }
 
     public PostEntity update(UUID id, PostEntity post) {
         PostEntity existingPost = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
 
-        existingPost.setTitle(post.getTitle());
-        existingPost.setSlug(post.getSlug());
-        existingPost.setContent(post.getContent());
-        existingPost.setExcerpt(post.getExcerpt());
-        existingPost.setFeaturedImage(post.getFeaturedImage());
-        existingPost.setStatus(post.getStatus());
-        existingPost.setPublishedAt(post.getPublishedAt());
-        existingPost.setViewCount(post.getViewCount());
-        existingPost.setAuthor(post.getAuthor());
-        existingPost.setTags(post.getTags());
-        existingPost.setCategories(post.getCategories());
-
+        postMapper.updateFromEntity(post, existingPost);
         return postRepository.save(existingPost);
     }
 
     public void deleteById(UUID id) {
-        postRepository.deleteById(id);
+        PostEntity existingPost = postRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
+        postMapper.applySoftDelete(existingPost, existingPost);
+        postRepository.save(existingPost);
     }
 
     @Transactional(readOnly = true)
@@ -145,9 +112,7 @@ public class PostService {
     }
 
     public List<PostResponse> getAllPosts() {
-        return postRepository.findAll().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        return postRepository.findAll().stream().map(postMapper::toResponse).collect(Collectors.toList());
     }
 
     public Page<PostResponse> getFilteredPosts(String category, String tag, String search, int page, int size) {
@@ -164,73 +129,50 @@ public class PostService {
             postsPage = postRepository.findAll(pageable);
         }
 
-        return postsPage.map(this::mapToResponse);
-    }
-
-    public Optional<PostResponse> getPostBySlug(String slug) {
-        return postRepository.findBySlug(slug)
-                .map(this::mapToResponse);
+        return postsPage.map(postMapper::toResponse);
     }
 
     public PostResponse updatePost(UUID id, CreatePostRequest request) {
         PostEntity existingPost = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
 
-        existingPost.setTitle(request.getTitle());
-        existingPost.setSlug(request.getSlug());
-        existingPost.setContent(request.getContent());
-        existingPost.setExcerpt(request.getExcerpt());
-        existingPost.setFeaturedImage(request.getFeaturedImage());
-        if (request.getStatus() != null) {
-            existingPost.setStatus(request.getStatus());
-        }
+        postMapper.updateFromRequest(request, existingPost);
 
-        // Update tags logic similar to create...
         if (request.getTags() != null) {
-            Set<TagEntity> tagEntities = new HashSet<>();
-            for (String tagName : request.getTags()) {
-                String slug = tagName.toLowerCase().replace(" ", "-");
-                TagEntity tag = tagRepository.findBySlug(slug)
-                        .orElseGet(() -> {
-                            TagEntity newTag = new TagEntity();
-                            newTag.setName(tagName);
-                            newTag.setSlug(slug);
-                            return tagRepository.save(newTag);
-                        });
-                tagEntities.add(tag);
-            }
-            existingPost.setTags(tagEntities);
+            handleTags(request, existingPost);
         }
 
-        return mapToResponse(postRepository.save(existingPost));
+        if (request.getCategoryIds() != null) {
+            handleCategories(request, existingPost);
+        }
+
+        return postMapper.toResponse(postRepository.save(existingPost));
     }
 
-    public PostResponse mapToResponse(PostEntity post) {
-        PostResponse response = new PostResponse();
-        response.setId(post.getId());
-        response.setTitle(post.getTitle());
-        response.setSlug(post.getSlug());
-        response.setContent(post.getContent());
-        response.setExcerpt(post.getExcerpt());
-        response.setFeaturedImage(post.getFeaturedImage());
-        response.setStatus(post.getStatus());
-        response.setPublishedAt(post.getPublishedAt());
-        response.setViewCount(post.getViewCount());
-
-        if (post.getAuthor() != null) {
-            PostResponse.AuthorResponse authorResponse = new PostResponse.AuthorResponse();
-            authorResponse.setId(post.getAuthor().getId());
-            authorResponse.setUsername(post.getAuthor().getUsername());
-            authorResponse.setFullName(post.getAuthor().getFullName());
-            authorResponse.setAvatarUrl(post.getAuthor().getAvatarUrl());
-            response.setAuthor(authorResponse);
+    private void handleTags(CreatePostRequest request, PostEntity existingPost) {
+        Set<TagEntity> tagEntities = new HashSet<>();
+        for (String tagName : request.getTags()) {
+            String slug = tagName.toLowerCase().replace(" ", "-");
+            TagEntity tag = tagRepository.findBySlug(slug)
+                    .orElseGet(() -> {
+                        TagEntity newTag = new TagEntity();
+                        newTag.setName(tagName);
+                        newTag.setSlug(slug);
+                        return tagRepository.save(newTag);
+                    });
+            tagEntities.add(tag);
         }
+        existingPost.setTags(tagEntities);
+    }
 
-        if (post.getTags() != null) {
-            response.setTags(post.getTags().stream().map(TagEntity::getName).collect(Collectors.toList()));
+    private void handleCategories(CreatePostRequest request, PostEntity existingPost) {
+        Set<CategoryEntity> categoryEntities = new HashSet<>();
+        for (UUID categoryId : request.getCategoryIds()) {
+            CategoryEntity category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
+            categoryEntities.add(category);
         }
-
-        return response;
+        existingPost.setCategories(categoryEntities);
     }
 
 }

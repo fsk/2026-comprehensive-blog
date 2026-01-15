@@ -1,15 +1,21 @@
-package com.fsk.blogsitebackend.dto;
+package com.fsk.blogsitebackend.dto.socialmedia;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateSocialMediaRequest {
+public class SocialMediaResponse {
+    private UUID id;
     private String name;
     private String url;
     private String iconName;
     private Integer displayOrder;
+    private Boolean isActive;
 }

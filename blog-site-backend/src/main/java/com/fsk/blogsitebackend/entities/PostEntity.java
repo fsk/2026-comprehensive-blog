@@ -32,7 +32,7 @@ public class PostEntity extends BaseEntity {
     private String slug;
 
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
-    private String content; // Markdown formatında içerik (images, code blocks, GIFs markdown syntax ile)
+    private String content;
 
     @Column(name = "excerpt", length = 1000)
     private String excerpt;
@@ -77,7 +77,18 @@ public class PostEntity extends BaseEntity {
         DRAFT,
         PUBLISHED,
         SCHEDULED,
-        ARCHIVED
+        DELETED
+    }
+
+    public static PostStatus getStatus(PostStatus status) {
+        return status != null ? status : PostStatus.DRAFT;
+    }
+
+    public List<String> getTagNames() {
+        if (tags == null) {
+            return null;
+        }
+        return tags.stream().map(TagEntity::getName).collect(java.util.stream.Collectors.toList());
     }
 
 }

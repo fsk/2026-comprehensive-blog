@@ -1,4 +1,4 @@
-package com.fsk.blogsitebackend.dto;
+package com.fsk.blogsitebackend.dto.comment.commentrequest;
 
 import java.util.UUID;
 

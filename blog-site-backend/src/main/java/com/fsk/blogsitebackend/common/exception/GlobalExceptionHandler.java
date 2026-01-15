@@ -1,16 +1,19 @@
 package com.fsk.blogsitebackend.common.exception;
 
-import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.fsk.blogsitebackend.common.ErrorMessages;
 import com.fsk.blogsitebackend.common.GenericResponse;
+import com.fsk.blogsitebackend.common.ResponseUtil;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -18,80 +21,53 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<GenericResponse<Void>> handleResourceNotFoundException(ResourceNotFoundException e) {
         String message = getNotFoundMessage(e.getResourceName());
-        GenericResponse<Void> response = GenericResponse.<Void>builder()
-                .isSuccess(false)
-                .error(e.getMessage())
-                .message(message)
-                .status(HttpStatus.NOT_FOUND)
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        return ResponseUtil.errorResponse(e.getMessage(), message, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(SlugAlreadyExistsException.class)
     public ResponseEntity<GenericResponse<Void>> handleSlugAlreadyExistsException(SlugAlreadyExistsException e) {
-        GenericResponse<Void> response = GenericResponse.<Void>builder()
-                .isSuccess(false)
-                .error(e.getMessage())
-                .message(ErrorMessages.DUPLICATE_SLUG)
-                .status(HttpStatus.CONFLICT)
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        return ResponseUtil.errorResponse(e.getMessage(), ErrorMessages.DUPLICATE_SLUG, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<GenericResponse<Void>> handleUserAlreadyExistsException(UserAlreadyExistsException e) {
-        GenericResponse<Void> response = GenericResponse.<Void>builder()
-                .isSuccess(false)
-                .error(e.getMessage())
-                .message("User already exists")
-                .status(HttpStatus.CONFLICT)
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        return ResponseUtil.errorResponse(e.getMessage(), "User already exists", HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(NoUsersFoundException.class)
     public ResponseEntity<GenericResponse<Void>> handleNoUsersFoundException(NoUsersFoundException e) {
-        GenericResponse<Void> response = GenericResponse.<Void>builder()
-                .isSuccess(false)
-                .error(e.getMessage())
-                .message(ErrorMessages.NO_USERS_FOUND)
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        return ResponseUtil.errorResponse(e.getMessage(), ErrorMessages.NO_USERS_FOUND, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<GenericResponse<Void>> handleRuntimeException(RuntimeException e) {
-        GenericResponse<Void> response = GenericResponse.<Void>builder()
-                .isSuccess(false)
-                .error(e.getMessage())
-                .message(ErrorMessages.RUNTIME_ERROR)
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        return ResponseUtil.errorResponse(e.getMessage(), ErrorMessages.RUNTIME_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<GenericResponse<Void>> handleIllegalArgumentException(IllegalArgumentException e) {
-        GenericResponse<Void> response = GenericResponse.<Void>builder()
-                .isSuccess(false)
-                .error(e.getMessage())
-                .message(String.format(ErrorMessages.INVALID_STATUS, e.getMessage()))
-                .status(HttpStatus.BAD_REQUEST)
-                .timestamp(LocalDateTime.now())
-                .build();
+        return ResponseUtil.errorResponse(e.getMessage(), String.format(ErrorMessages.INVALID_STATUS, e.getMessage()),
+                HttpStatus.BAD_REQUEST);
+    }
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<GenericResponse<Void>> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException e) {
+        String errorMessage = e.getBindingResult().getFieldErrors().stream()
+                .map(FieldError::getDefaultMessage)
+                .collect(Collectors.joining(", "));
+
+        if (errorMessage.isEmpty()) {
+            errorMessage = e.getBindingResult().getAllErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .collect(Collectors.joining(", "));
+        }
+
+        if (errorMessage.isEmpty()) {
+            errorMessage = ErrorMessages.VALIDATION_ERROR;
+        }
+
+        return ResponseUtil.errorResponse(errorMessage, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -118,41 +94,20 @@ public class GlobalExceptionHandler {
             errorMessage = ErrorMessages.DATA_INTEGRITY_DEFAULT;
         }
 
-        GenericResponse<Void> response = GenericResponse.<Void>builder()
-                .isSuccess(false)
-                .error(errorMessage)
-                .message(ErrorMessages.DATA_INTEGRITY_VIOLATION)
-                .status(HttpStatus.BAD_REQUEST)
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        return ResponseUtil.errorResponse(errorMessage, ErrorMessages.DATA_INTEGRITY_VIOLATION,
+                HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<GenericResponse<Void>> handleDataAccessException(DataAccessException e) {
-        GenericResponse<Void> response = GenericResponse.<Void>builder()
-                .isSuccess(false)
-                .error(e.getMessage())
-                .message(ErrorMessages.DATABASE_ACCESS_ERROR)
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        return ResponseUtil.errorResponse(e.getMessage(), ErrorMessages.DATABASE_ACCESS_ERROR,
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<GenericResponse<Void>> handleGenericException(Exception e) {
-        GenericResponse<Void> response = GenericResponse.<Void>builder()
-                .isSuccess(false)
-                .error(e.getMessage())
-                .message(ErrorMessages.UNEXPECTED_ERROR)
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        return ResponseUtil.errorResponse(e.getMessage(), ErrorMessages.UNEXPECTED_ERROR,
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private String getNotFoundMessage(String resourceName) {

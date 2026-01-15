@@ -3,7 +3,7 @@ import PostService, { CategoryService } from '../services/api';
 import type { Post } from '../types';
 import Layout from '../components/layout/Layout';
 import PostCard from '../components/ui/PostCard';
-import Typewriter from '../components/ui/Typewriter';
+import { TypeAnimation } from 'react-type-animation';
 import { Loader2, Search, Filter, ChevronDown } from 'lucide-react';
 import Pagination from '../components/ui/Pagination';
 
@@ -115,17 +115,27 @@ const Home = () => {
             <div className="space-y-8">
                 <div className="text-center pt-4 pb-10 sm:pt-6 sm:pb-14">
                     <div className="min-h-[4rem] flex items-center justify-center">
-                        <h1 className="text-lg sm:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-[#EA580C] via-[#F59E0B] to-[#FBBF24] tracking-tighter">
-                            <Typewriter
-                                texts={[
-                                    "Furkan Sahin Kulaksiz",
-                                    "Java & Spring Boot Specialist",
-                                    "React & Frontend Engineer",
-                                    "Learning Every Day"
+                        <h1 className="text-lg sm:text-2xl font-black tracking-tighter">
+                            <TypeAnimation
+                                sequence={[
+                                    "Furkan Şahin Kulaksız",
+                                    2500,
+                                    "Software Engineer",
+                                    2500,
+                                    "Math Reader",
+                                    2500,
+                                    "Chess Player",
+                                    2500,
+                                    "Time to tome Kick Boxer",
+                                    2500,
+                                    "Learning Every Day",
+                                    2500
                                 ]}
-                                typingSpeed={70}
-                                deletingSpeed={40}
-                                pauseDuration={2500}
+                                wrapper="span"
+                                speed={50}
+                                repeat={Infinity}
+                                cursor={true}
+                                className="inline-block bg-clip-text text-transparent bg-gradient-to-r from-[#EA580C] via-[#F59E0B] to-[#FBBF24]"
                             />
                         </h1>
                     </div>

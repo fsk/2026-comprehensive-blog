@@ -1,4 +1,4 @@
-package com.fsk.blogsitebackend.dto;
+package com.fsk.blogsitebackend.dto.post;
 
 import java.time.LocalDateTime;
 import java.util.List;

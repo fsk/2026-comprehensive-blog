@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Github, Linkedin, Moon, Sun, Instagram, LogOut, User, Twitter, Youtube, ChevronDown, ExternalLink } from 'lucide-react';
+import { Menu, X, Github, Linkedin, Moon, Sun, Instagram, LogOut, User, Twitter, Youtube, ChevronDown, ExternalLink, Bell } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import NotificationBell from '../ui/NotificationBell';
 import { getCurrentUser, setCurrentUser, SocialMediaService } from '../../services/api';
@@ -133,6 +133,16 @@ const Navbar = () => {
                             >
                                 Yazı Yaz
                             </Link>
+
+                            {user?.role === 'ADMIN' && (
+                                <Link
+                                    to="/admin/announcement"
+                                    className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-[#EA580C] px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:text-[#EA580C] flex items-center gap-2"
+                                >
+                                    <Bell className="w-4 h-4" />
+                                    Duyuru
+                                </Link>
+                            )}
 
                             {/* Sosyal Medya Dropdown */}
                             <div className="relative group/socials">

@@ -8,6 +8,23 @@ import { SocialMediaService } from '../services/api';
 import type { SocialMedia } from '../types';
 import { LeetCodeIcon, MediumIcon } from '../components/ui/BrandIcons';
 import { useToast } from '../context/ToastContext';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    type DragEndEvent
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const IconMap: Record<string, React.FC<{ className?: string }>> = {
     Twitter,
@@ -17,6 +34,31 @@ const IconMap: Record<string, React.FC<{ className?: string }>> = {
     Youtube,
     LeetCode: LeetCodeIcon,
     Medium: MediumIcon
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const SortableItem = ({ id, children }: { id: string; children: any }) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 10 : 1,
+        opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+            {children}
+        </div>
+    );
 };
 
 const SocialMediaAdmin = () => {
@@ -45,6 +87,42 @@ const SocialMediaAdmin = () => {
             showToast('Social media links could not be loaded', 'error');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (active.id !== over?.id) {
+            setLinks((items) => {
+                const oldIndex = items.findIndex((item) => item.id === active.id);
+                const newIndex = items.findIndex((item) => item.id === over?.id);
+                const newItems = arrayMove(items, oldIndex, newIndex);
+
+                // Update displayOrder for all items locally
+                const updatedItems = newItems.map((item, index) => ({
+                    ...item,
+                    displayOrder: index
+                }));
+
+                // Backend reorder is disabled/removed. Local reorder only.
+                // try {
+                //     const idList = updatedItems.map(item => item.id);
+                //     await SocialMediaService.reorderSocialMedia(idList);
+                // } catch (error) {
+                //     console.error('Failed to reorder:', error);
+                //     showToast('Sıralama güncellenemedi', 'error');
+                // }
+
+                return updatedItems;
+            });
         }
     };
 
@@ -229,72 +307,92 @@ const SocialMediaAdmin = () => {
                                 <p className="text-slate-400 font-bold">Henüz hiç sosyal medya linki eklenmemiş.</p>
                             </div>
                         ) : (
-                            <div className="space-y-4">
-                                {links.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)).map((link) => {
-                                    const Icon = IconMap[link.iconName] || Twitter;
-                                    return (
-                                        <div
-                                            key={link.id}
-                                            className={`bg-white dark:bg-slate-900 rounded-3xl p-5 border transition-all group ${editingId === link.id ? 'border-orange-500 ring-4 ring-orange-500/10' : 'border-slate-100 dark:border-slate-800 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none hover:-translate-y-1'}`}
-                                        >
-                                            <div className="flex items-center justify-between gap-4">
-                                                <div className="flex items-center gap-4">
-                                                    <div className={`w-14 h-14 rounded-2xl border-2 flex items-center justify-center transition-all ${link.isActive ? 'border-orange-500 text-orange-500 bg-orange-50 dark:bg-orange-500/10' : 'border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600'}`}>
-                                                        <Icon className="w-7 h-7" />
-                                                    </div>
-                                                    <div>
-                                                        <div className="flex items-center gap-2">
-                                                            <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight">{link.name}</h3>
-                                                            {!link.isActive && <span className="bg-slate-100 dark:bg-slate-800 text-slate-400 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Gizli</span>}
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={handleDragEnd}
+                            >
+                                <SortableContext
+                                    items={links}
+                                    strategy={verticalListSortingStrategy}
+                                >
+                                    <div className="space-y-4">
+                                        {links.map((link) => {
+                                            const Icon = IconMap[link.iconName] || Twitter;
+                                            return (
+                                                <SortableItem key={link.id} id={link.id}>
+                                                    <div
+                                                        className={`bg-white dark:bg-slate-900 rounded-3xl p-5 border transition-all group relative ${editingId === link.id ? 'border-orange-500 ring-4 ring-orange-500/10' : 'border-slate-100 dark:border-slate-800 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none'}`}
+                                                    >
+                                                        <div className="flex items-center justify-between gap-4 pb-4">
+                                                            <div className="flex items-center gap-4">
+                                                                {/* Drag Handle Indicator */}
+                                                                <div className="cursor-grab active:cursor-grabbing p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-300">
+                                                                    <Hash className="w-5 h-5" />
+                                                                </div>
+                                                                <div className={`w-14 h-14 rounded-2xl border-2 flex items-center justify-center transition-all ${link.isActive ? 'border-orange-500 text-orange-500 bg-orange-50 dark:bg-orange-500/10' : 'border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600'}`}>
+                                                                    <Icon className="w-7 h-7" />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight">{link.name}</h3>
+                                                                        {!link.isActive && <span className="bg-slate-100 dark:bg-slate-800 text-slate-400 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Gizli</span>}
+                                                                    </div>
+                                                                    <a
+                                                                        href={link.url}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="text-sm text-slate-400 hover:text-orange-500 flex items-center gap-1 transition-colors truncate max-w-[200px] md:max-w-xs"
+                                                                    >
+                                                                        {link.url}
+                                                                        <ExternalLink className="w-3 h-3" />
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Reorder Icons (Visual only for now, depends on displayOrder sorting) */}
+                                                            <div className="flex items-center gap-2 mb-8">
+                                                                <div className="flex flex-col gap-1 items-center justify-center px-3 border-l border-slate-100 dark:border-slate-800">
+                                                                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">Sıra</span>
+                                                                    <span className="text-xl font-black text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 w-8 h-8 flex items-center justify-center rounded-lg">{link.displayOrder + 1}</span>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <a
-                                                            href={link.url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="text-sm text-slate-400 hover:text-orange-500 flex items-center gap-1 transition-colors truncate max-w-[200px] md:max-w-xs"
-                                                        >
-                                                            {link.url}
-                                                            <ExternalLink className="w-3 h-3" />
-                                                        </a>
-                                                    </div>
-                                                </div>
 
-                                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                                                    <button
-                                                        onClick={() => handleToggleActive(link.id)}
-                                                        className={`p-3 rounded-2xl transition-all ${link.isActive ? 'bg-orange-50 text-orange-600 hover:bg-orange-100' : 'bg-slate-50 text-slate-400 hover:bg-slate-100 dark:bg-slate-800'}`}
-                                                        title={link.isActive ? 'Linki Gizle' : 'Linki Göster'}
-                                                    >
-                                                        {link.isActive ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleEdit(link)}
-                                                        className="p-3 bg-blue-50 dark:bg-blue-500/10 text-blue-600 rounded-2xl hover:bg-blue-100 transition-all"
-                                                        title="Düzenle"
-                                                    >
-                                                        <Edit2 className="w-5 h-5" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(link.id)}
-                                                        className="p-3 bg-red-50 dark:bg-red-500/10 text-red-600 rounded-2xl hover:bg-red-100 transition-all"
-                                                        title="Sil"
-                                                    >
-                                                        <Trash2 className="w-5 h-5" />
-                                                    </button>
-                                                </div>
-
-                                                {/* Reorder Icons (Visual only for now, depends on displayOrder sorting) */}
-                                                <div className="flex items-center gap-2">
-                                                    <div className="flex flex-col gap-1 items-center justify-center px-3 border-l border-slate-100 dark:border-slate-800">
-                                                        <span className="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase">Sıra</span>
-                                                        <span className="text-xl font-black text-slate-200 dark:text-slate-800">{link.displayOrder}</span>
+                                                        {/* Action Buttons - Fixed Bottom Right */}
+                                                        <div className="absolute bottom-3 right-3 flex items-center gap-1">
+                                                            <button
+                                                                onClick={() => handleToggleActive(link.id)}
+                                                                className={`p-2 rounded-xl transition-all ${link.isActive ? 'bg-orange-50 text-orange-600 hover:bg-orange-100' : 'bg-slate-50 text-slate-400 hover:bg-slate-100 dark:bg-slate-800'} hover:scale-110 active:scale-95`}
+                                                                title={link.isActive ? 'Linki Gizle' : 'Linki Göster'}
+                                                                onPointerDown={(e) => e.stopPropagation()}
+                                                            >
+                                                                {link.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleEdit(link)}
+                                                                className="p-2 bg-blue-50 dark:bg-blue-500/10 text-blue-600 rounded-xl hover:bg-blue-100 transition-all hover:scale-110 active:scale-95"
+                                                                title="Düzenle"
+                                                                onPointerDown={(e) => e.stopPropagation()}
+                                                            >
+                                                                <Edit2 className="w-4 h-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDelete(link.id)}
+                                                                className="p-2 bg-red-50 dark:bg-red-500/10 text-red-600 rounded-xl hover:bg-red-100 transition-all hover:scale-110 active:scale-95"
+                                                                title="Sil"
+                                                                onPointerDown={(e) => e.stopPropagation()}
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                                                </SortableItem>
+                                            );
+                                        })}
+                                    </div>
+                                </SortableContext>
+                            </DndContext>
                         )}
                     </div>
                 </div>

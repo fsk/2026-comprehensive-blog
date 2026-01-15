@@ -97,7 +97,7 @@ const PostDetail = () => {
                                     ))}
                                     <div className="flex items-center gap-2 text-[#EA580C] bg-[#EA580C]/10 px-3 py-1 rounded-full border border-[#EA580C]/20">
                                         <TrendingUp className="w-3.5 h-3.5" />
-                                        <span className="text-xs font-bold uppercase tracking-wider">{post.tags?.[0] || 'Genel'}</span>
+                                        <span className="text-xs font-bold uppercase tracking-wider">{post.tags?.[0]?.name || 'Genel'}</span>
                                     </div>
                                     <div className="sm:ml-auto">
                                         <Link

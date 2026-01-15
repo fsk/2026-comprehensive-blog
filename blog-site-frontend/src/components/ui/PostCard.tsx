@@ -47,7 +47,7 @@ const PostCard = ({ post, featured = false }: PostCardProps) => {
                     </div>
                     <div className="flex gap-2">
                         {post.tags.slice(0, 2).map(tag => (
-                            <Badge key={tag} variant="secondary" className="bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300">#{tag}</Badge>
+                            <Badge key={tag.id} variant="secondary" className="bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300">#{tag.name}</Badge>
                         ))}
                     </div>
                 </div>

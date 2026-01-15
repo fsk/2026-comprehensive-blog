@@ -56,6 +56,17 @@ public class SuccessMessages {
     public static final String SOCIAL_MEDIA_UPDATED = "Social media link updated successfully";
     public static final String SOCIAL_MEDIA_DELETED = "Social media link deleted successfully";
 
+    // About messages
+    public static final String ABOUT_INFO_RETRIEVED = "About info retrieved successfully";
+    public static final String EDUCATION_ADDED = "Education added successfully";
+    public static final String EDUCATION_DELETED = "Education deleted successfully";
+    public static final String EXPERIENCE_ADDED = "Experience added successfully";
+    public static final String EXPERIENCE_UPDATED = "Experience updated successfully";
+    public static final String EXPERIENCE_DELETED = "Experience deleted successfully";
+    public static final String REFERENCE_ADDED = "Reference added successfully";
+    public static final String REFERENCE_UPDATED = "Reference updated successfully";
+    public static final String REFERENCE_DELETED = "Reference deleted successfully";
+
     private SuccessMessages() {
         // Utility class - prevent instantiation
     }

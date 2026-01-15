@@ -25,10 +25,10 @@ const Login = () => {
             // In a real scenario, this would be an API call verifying credentials
             if (formData.identifier && formData.password) {
                 setCurrentUser({
-                    id: 'mock-user-id-123',
+                    id: '550e8400-e29b-41d4-a716-446655440000',
                     username: formData.identifier.includes('@') ? formData.identifier.split('@')[0] : formData.identifier,
                     fullName: 'Test Kullanıcı',
-                    role: 'USER',
+                    role: 'ADMIN',
                     unreadNotificationCount: 0,
                 });
                 navigate('/');
