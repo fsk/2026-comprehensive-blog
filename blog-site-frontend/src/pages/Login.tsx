@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, LogIn, Eye, EyeOff, User } from 'lucide-react';
+import { Lock, Eye, EyeOff, User } from 'lucide-react';
 import Layout from '../components/layout/Layout';
-import { setCurrentUser } from '../services/api';
+import { AuthService } from '../services/api';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -19,24 +19,17 @@ const Login = () => {
         setIsLoading(true);
         setError('');
 
-        // Simulating authentication delay and mock success
-        setTimeout(() => {
-            // Mocking a successful login
-            // In a real scenario, this would be an API call verifying credentials
-            if (formData.identifier && formData.password) {
-                setCurrentUser({
-                    id: '550e8400-e29b-41d4-a716-446655440000',
-                    username: formData.identifier.includes('@') ? formData.identifier.split('@')[0] : formData.identifier,
-                    fullName: 'Test Kullanıcı',
-                    role: 'ADMIN',
-                    unreadNotificationCount: 0,
-                });
-                navigate('/');
-            } else {
-                setError('Lütfen tüm alanları doldurunuz.');
-                setIsLoading(false);
-            }
-        }, 1000);
+        try {
+            await AuthService.login({
+                username: formData.identifier,
+                password: formData.password
+            });
+            navigate('/');
+        } catch (err: any) {
+            setError(err.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,9 +43,7 @@ const Login = () => {
                 <div className="w-full max-w-md">
                     {/* Header */}
                     <div className="text-center mb-10">
-                        <div className="mx-auto w-20 h-20 bg-gradient-to-br from-[#EA580C] to-[#FBBF24] rounded-[2rem] flex items-center justify-center mb-6 shadow-xl shadow-orange-500/20 transform hover:rotate-6 transition-transform">
-                            <LogIn className="w-10 h-10 text-white" />
-                        </div>
+
                         <h1 className="text-4xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
                             Hoş Geldiniz
                         </h1>

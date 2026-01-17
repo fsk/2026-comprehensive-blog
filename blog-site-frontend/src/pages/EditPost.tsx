@@ -9,6 +9,9 @@ import PostService, { CategoryService } from '../services/api';
 import { Save, Eye, PenTool, Plus, Settings, Check, ArrowLeft } from 'lucide-react';
 import CategoryDropdown from '../components/ui/CategoryDropdown';
 import { useToast } from '../context/ToastContext';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
+import { AlertCircle, Info, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 
 const EditPost = () => {
     const { slug: urlSlug } = useParams<{ slug: string }>();
@@ -266,6 +269,13 @@ const EditPost = () => {
                                             className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 focus:ring-[#FBBF24]/50 transition-all"
                                             required
                                         />
+                                        <textarea
+                                            placeholder="Kategori Açıklaması"
+                                            value={categoryFormData.description}
+                                            onChange={(e) => setCategoryFormData({ ...categoryFormData, description: e.target.value })}
+                                            rows={2}
+                                            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 focus:ring-[#FBBF24]/50 transition-all resize-none"
+                                        />
                                         <button
                                             type="submit"
                                             className="w-full flex items-center justify-center gap-2 bg-slate-900 dark:bg-sky-600 text-white py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity shadow-sm"
@@ -374,7 +384,7 @@ const EditPost = () => {
                                     value={formData.content}
                                     onChange={handleChange}
                                     className="w-full flex-grow p-8 bg-transparent text-slate-900 dark:text-slate-100 outline-none font-mono resize-none leading-relaxed text-lg"
-                                    placeholder="# Merhaba Dünya\n\nİçeriğinizi buraya yazın..."
+                                    placeholder="# Merhaba Dünya"
                                 />
                             </>
                         ) : (
@@ -386,7 +396,74 @@ const EditPost = () => {
                 ">
                                 <ReactMarkdown
                                     rehypePlugins={[rehypeRaw]}
+                                    remarkPlugins={[remarkGfm, remarkBreaks]}
                                     components={{
+                                        blockquote: ({ children, ...props }: any) => {
+                                            const content = children?.filter((child: any) => child?.type !== '\n');
+                                            const firstChild = content?.[0];
+
+                                            if (firstChild?.type === 'p' && firstChild?.props?.children) {
+                                                const textContent = Array.isArray(firstChild.props.children)
+                                                    ? firstChild.props.children.map(String).join('')
+                                                    : String(firstChild.props.children);
+
+                                                const alertMatch = textContent.match(/^\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/);
+
+                                                if (alertMatch) {
+                                                    const type = alertMatch[1];
+
+                                                    let newFirstChildChildren = firstChild.props.children;
+                                                    if (Array.isArray(newFirstChildChildren)) {
+                                                        const index = newFirstChildChildren.findIndex((c: any) => typeof c === 'string' && c.match(/^\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/));
+                                                        if (index !== -1) {
+                                                            const originalText = newFirstChildChildren[index];
+                                                            const newText = originalText.replace(/^\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*/, '');
+                                                            newFirstChildChildren = [
+                                                                ...newFirstChildChildren.slice(0, index),
+                                                                newText,
+                                                                ...newFirstChildChildren.slice(index + 1)
+                                                            ];
+                                                        }
+                                                    } else if (typeof newFirstChildChildren === 'string') {
+                                                        newFirstChildChildren = newFirstChildChildren.replace(/^\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*/, '');
+                                                    }
+
+                                                    const newFirstChild = {
+                                                        ...firstChild,
+                                                        props: {
+                                                            ...firstChild.props,
+                                                            children: newFirstChildChildren
+                                                        }
+                                                    };
+
+                                                    const newChildren = [newFirstChild, ...content.slice(1)];
+
+                                                    const alertStyles: Record<string, { bg: string, border: string, text: string, icon: React.ReactElement, title: string }> = {
+                                                        NOTE: { bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-blue-200 dark:border-blue-800', text: 'text-blue-800 dark:text-blue-200', icon: <Info className="w-5 h-5 text-blue-600 dark:text-blue-400" />, title: 'Note' },
+                                                        TIP: { bg: 'bg-emerald-50 dark:bg-emerald-900/20', border: 'border-emerald-200 dark:border-emerald-800', text: 'text-emerald-800 dark:text-emerald-200', icon: <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />, title: 'Tip' },
+                                                        IMPORTANT: { bg: 'bg-violet-50 dark:bg-violet-900/20', border: 'border-violet-200 dark:border-violet-800', text: 'text-violet-800 dark:text-violet-200', icon: <AlertCircle className="w-5 h-5 text-violet-600 dark:text-violet-400" />, title: 'Important' },
+                                                        WARNING: { bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-200 dark:border-amber-800', text: 'text-amber-800 dark:text-amber-200', icon: <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />, title: 'Warning' },
+                                                        CAUTION: { bg: 'bg-rose-50 dark:bg-rose-900/20', border: 'border-rose-200 dark:border-rose-800', text: 'text-rose-800 dark:text-rose-200', icon: <XCircle className="w-5 h-5 text-rose-600 dark:text-rose-400" />, title: 'Caution' }
+                                                    };
+
+                                                    const style = alertStyles[type as keyof typeof alertStyles] || alertStyles.NOTE;
+
+                                                    return (
+                                                        <div className={`my-4 ml-0 rounded-lg border-l-4 ${style.bg} ${style.border} p-4`}>
+                                                            <div className="flex items-center gap-2 mb-2">
+                                                                {style.icon}
+                                                                <span className={`text-sm font-bold ${style.text} uppercase tracking-wide`}>{style.title}</span>
+                                                            </div>
+                                                            <div className={`text-slate-700 dark:text-slate-300 ${style.text}`}>
+                                                                {newChildren}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
+                                            }
+
+                                            return <blockquote {...props} className="border-l-4 border-slate-300 dark:border-slate-600 pl-4 py-1 italic bg-slate-50 dark:bg-slate-800 rounded-r">{children}</blockquote>;
+                                        },
                                         pre: ({ children }: any) => <>{children}</>,
                                         code({ node, inline, className, children, ...props }: any) {
                                             const match = /language-(\w+)/.exec(className || '');

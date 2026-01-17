@@ -9,8 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fsk.blogsitebackend.common.exception.ResourceNotFoundException;
 import com.fsk.blogsitebackend.common.exception.UserAlreadyExistsException;
-import com.fsk.blogsitebackend.dto.RegisterRequest;
-import com.fsk.blogsitebackend.dto.UserResponse;
+import com.fsk.blogsitebackend.dto.user.userrequest.RegisterRequest;
+import com.fsk.blogsitebackend.dto.user.UserResponse;
 import com.fsk.blogsitebackend.entities.User;
 import com.fsk.blogsitebackend.entities.User.UserRole;
 import com.fsk.blogsitebackend.repository.UserRepository;
@@ -23,6 +23,8 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    private final com.fsk.blogsitebackend.dto.user.UserMapper userMapper;
 
     public UserResponse register(RegisterRequest request) {
         // Check if username exists
@@ -35,26 +37,25 @@ public class UserService {
             throw new UserAlreadyExistsException("email", request.getEmail());
         }
 
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        // TODO: Hash password with BCrypt when Spring Security is added
-        user.setPassword(request.getPassword()); // Plain text for now
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setRole(UserRole.USER); // All registrations are USER role
-        user.setEmailNotificationsEnabled(request.getEmailNotificationsEnabled());
-        user.setUnreadNotificationCount(0);
+        User user = userMapper.toEntity(request);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        // If this is the first user, make them ADMIN
+        if (userRepository.count() == 0) {
+            user.setRole(UserRole.ADMIN);
+        } else {
+            user.setRole(UserRole.USER);
+        }
 
         User savedUser = userRepository.save(user);
-        return mapToResponse(savedUser);
+        return userMapper.toResponse(savedUser);
     }
 
     @Transactional(readOnly = true)
     public UserResponse getUserById(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
-        return mapToResponse(user);
+        return userMapper.toResponse(user);
     }
 
     @Transactional(readOnly = true)
@@ -70,6 +71,13 @@ public class UserService {
     @Transactional(readOnly = true)
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    @Transactional(readOnly = true)
+    public UserResponse getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+        return userMapper.toResponse(user);
     }
 
     @Transactional(readOnly = true)
@@ -110,17 +118,28 @@ public class UserService {
         return userRepository.existsByEmail(email);
     }
 
-    private UserResponse mapToResponse(User user) {
-        UserResponse response = new UserResponse();
-        response.setId(user.getId());
-        response.setUsername(user.getUsername());
-        response.setEmail(user.getEmail());
-        response.setFirstName(user.getFirstName());
-        response.setLastName(user.getLastName());
-        response.setFullName(user.getFullName());
-        response.setRole(user.getRole().name());
-        response.setEmailNotificationsEnabled(user.getEmailNotificationsEnabled());
-        response.setUnreadNotificationCount(user.getUnreadNotificationCount());
-        return response;
+    // Email Verification Logic
+    private final com.fsk.blogsitebackend.repository.VerificationTokenRepository tokenRepository;
+
+    public void createVerificationToken(User user, String token) {
+        com.fsk.blogsitebackend.entities.VerificationToken myToken = new com.fsk.blogsitebackend.entities.VerificationToken(
+                token, user);
+        tokenRepository.save(myToken);
     }
+
+    public void verifyEmail(String token) {
+        com.fsk.blogsitebackend.entities.VerificationToken verificationToken = tokenRepository.findByToken(token)
+                .orElseThrow(() -> new ResourceNotFoundException("VerificationToken", "token", token));
+
+        if (verificationToken.isExpired()) {
+            tokenRepository.delete(verificationToken);
+            throw new RuntimeException("Verification token has expired");
+        }
+
+        User user = verificationToken.getUser();
+        user.setEnabled(true);
+        userRepository.save(user);
+        tokenRepository.delete(verificationToken);
+    }
+
 }

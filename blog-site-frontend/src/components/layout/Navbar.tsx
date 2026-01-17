@@ -127,12 +127,14 @@ const Navbar = () => {
                                 </div>
                             )}
 
-                            <Link
-                                to="/admin/posts/new"
-                                className="bg-gradient-to-r from-[#EA580C] to-[#FBBF24] hover:scale-105 text-white dark:text-slate-900 px-5 py-2.5 rounded-xl text-sm font-black transition-all shadow-lg shadow-orange-500/20 active:scale-95"
-                            >
-                                Yazı Yaz
-                            </Link>
+                            {user?.role === 'ADMIN' && (
+                                <Link
+                                    to="/admin/posts/new"
+                                    className="bg-gradient-to-r from-[#EA580C] to-[#FBBF24] hover:scale-105 text-white dark:text-slate-900 px-5 py-2.5 rounded-xl text-sm font-black transition-all shadow-lg shadow-orange-500/20 active:scale-95"
+                                >
+                                    Yazı Yaz
+                                </Link>
+                            )}
 
                             {user?.role === 'ADMIN' && (
                                 <Link
@@ -177,13 +179,15 @@ const Navbar = () => {
                                     </div>
                                     <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Takip Edin</p>
-                                        <Link
-                                            to="/admin/social-media"
-                                            className="text-[10px] font-bold text-[#EA580C] hover:text-[#FBBF24] uppercase tracking-widest flex items-center gap-1 transition-colors"
-                                            onClick={() => setShowSocials(false)}
-                                        >
-                                            Yönet <ExternalLink className="w-2.5 h-2.5" />
-                                        </Link>
+                                        {user?.role === 'ADMIN' && (
+                                            <Link
+                                                to="/admin/social-media"
+                                                className="text-[10px] font-bold text-[#EA580C] hover:text-[#FBBF24] uppercase tracking-widest flex items-center gap-1 transition-colors"
+                                                onClick={() => setShowSocials(false)}
+                                            >
+                                                Yönet <ExternalLink className="w-2.5 h-2.5" />
+                                            </Link>
+                                        )}
                                     </div>
                                 </div>
                             </div>

@@ -2,6 +2,7 @@ package com.fsk.blogsitebackend.common.exception;
 
 import java.util.stream.Collectors;
 
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -31,17 +32,19 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<GenericResponse<Void>> handleUserAlreadyExistsException(UserAlreadyExistsException e) {
-        return ResponseUtil.errorResponse(e.getMessage(), "User already exists", HttpStatus.CONFLICT);
+        return ResponseUtil.errorResponse(e.getMessage(), ErrorMessages.USER_ALREADY_EXISTS, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(NoUsersFoundException.class)
     public ResponseEntity<GenericResponse<Void>> handleNoUsersFoundException(NoUsersFoundException e) {
-        return ResponseUtil.errorResponse(e.getMessage(), ErrorMessages.NO_USERS_FOUND, HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseUtil.errorResponse(e.getMessage(), ErrorMessages.NO_USERS_FOUND,
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<GenericResponse<Void>> handleRuntimeException(RuntimeException e) {
-        return ResponseUtil.errorResponse(e.getMessage(), ErrorMessages.RUNTIME_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseUtil.errorResponse(e.getMessage(), ErrorMessages.RUNTIME_ERROR,
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -59,7 +62,7 @@ public class GlobalExceptionHandler {
 
         if (errorMessage.isEmpty()) {
             errorMessage = e.getBindingResult().getAllErrors().stream()
-                    .map(error -> error.getDefaultMessage())
+                    .map(DefaultMessageSourceResolvable::getDefaultMessage)
                     .collect(Collectors.joining(", "));
         }
 
@@ -94,8 +97,21 @@ public class GlobalExceptionHandler {
             errorMessage = ErrorMessages.DATA_INTEGRITY_DEFAULT;
         }
 
-        return ResponseUtil.errorResponse(errorMessage, ErrorMessages.DATA_INTEGRITY_VIOLATION,
-                HttpStatus.BAD_REQUEST);
+        return ResponseUtil.errorResponse(errorMessage, ErrorMessages.DATA_INTEGRITY_VIOLATION, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<GenericResponse<Void>> handleAccessDeniedException(
+            org.springframework.security.access.AccessDeniedException e) {
+        return ResponseUtil.errorResponse(ErrorMessages.ACCESS_DENIED_TITLE, ErrorMessages.ACCESS_DENIED_DETAIL,
+                HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<GenericResponse<Void>> handleAuthenticationException(
+            org.springframework.security.core.AuthenticationException e) {
+        return ResponseUtil.errorResponse(ErrorMessages.AUTH_FAILED_TITLE,
+                ErrorMessages.AUTH_FAILED_DETAIL, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(DataAccessException.class)

@@ -70,7 +70,7 @@ const SocialMediaAdmin = () => {
         name: '',
         url: '',
         iconName: '',
-        displayOrder: 0,
+        displayOrder: 1,
         isActive: true
     });
 
@@ -109,7 +109,7 @@ const SocialMediaAdmin = () => {
                 // Update displayOrder for all items locally
                 const updatedItems = newItems.map((item, index) => ({
                     ...item,
-                    displayOrder: index
+                    displayOrder: index + 1
                 }));
 
                 // Backend reorder is disabled/removed. Local reorder only.
@@ -160,7 +160,7 @@ const SocialMediaAdmin = () => {
             name: '',
             url: '',
             iconName: '',
-            displayOrder: 0,
+            displayOrder: links.length + 1,
             isActive: true
         });
     };
@@ -267,7 +267,7 @@ const SocialMediaAdmin = () => {
                                             required
                                             className="w-full pl-11 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 focus:border-[#EA580C] focus:ring-4 focus:ring-[#EA580C]/10 transition-all outline-none dark:text-white"
                                             value={formData.displayOrder}
-                                            onChange={e => setFormData({ ...formData, displayOrder: parseInt(e.target.value || '0') })}
+                                            onChange={e => setFormData({ ...formData, displayOrder: e.target.value === '' ? ('' as any) : parseInt(e.target.value) })}
                                         />
                                     </div>
                                 </div>
@@ -354,7 +354,7 @@ const SocialMediaAdmin = () => {
                                                             <div className="flex items-center gap-2 mb-8">
                                                                 <div className="flex flex-col gap-1 items-center justify-center px-3 border-l border-slate-100 dark:border-slate-800">
                                                                     <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">Sıra</span>
-                                                                    <span className="text-xl font-black text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 w-8 h-8 flex items-center justify-center rounded-lg">{link.displayOrder + 1}</span>
+                                                                    <span className="text-xl font-black text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 w-8 h-8 flex items-center justify-center rounded-lg">{link.displayOrder}</span>
                                                                 </div>
                                                             </div>
                                                         </div>

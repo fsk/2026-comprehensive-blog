@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Image, Code, Bold, Italic, Link as LinkIcon, List, Heading1, Heading2, Heading3, Quote, ChevronDown, Underline, Highlighter, Minus, StickyNote, Palette } from 'lucide-react';
+import { Image, Code, Bold, Italic, Link as LinkIcon, List, Heading1, Heading2, Heading3, Quote, ChevronDown, Underline, Highlighter, Minus, StickyNote, Palette, Info, CheckCircle2, AlertCircle, AlertTriangle, XCircle } from 'lucide-react';
 import Tooltip from './Tooltip';
 
 interface MarkdownToolbarProps {
@@ -10,6 +10,7 @@ const MarkdownToolbar = ({ onInsert }: MarkdownToolbarProps) => {
     const [showLanguageMenu, setShowLanguageMenu] = useState(false);
     const [showColorMenu, setShowColorMenu] = useState(false);
     const [showHeadingMenu, setShowHeadingMenu] = useState(false);
+    const [showNoteMenu, setShowNoteMenu] = useState(false);
 
     const languages = [
         { name: 'Java', id: 'java', description: '```java ... ```' },
@@ -21,6 +22,14 @@ const MarkdownToolbar = ({ onInsert }: MarkdownToolbarProps) => {
         { name: 'Bash', id: 'bash', description: '```bash ... ```' },
         { name: 'SQL', id: 'sql', description: '```sql ... ```' },
         { name: 'JSON', id: 'json', description: '```json ... ```' },
+    ];
+
+    const alerts = [
+        { name: 'Note', value: 'NOTE', icon: Info, color: 'text-blue-600', description: 'Bilgi notu' },
+        { name: 'Tip', value: 'TIP', icon: CheckCircle2, color: 'text-emerald-600', description: 'İpucu' },
+        { name: 'Important', value: 'IMPORTANT', icon: AlertCircle, color: 'text-violet-600', description: 'Önemli' },
+        { name: 'Warning', value: 'WARNING', icon: AlertTriangle, color: 'text-amber-600', description: 'Uyarı' },
+        { name: 'Caution', value: 'CAUTION', icon: XCircle, color: 'text-rose-600', description: 'Dikkat' },
     ];
 
     const colors = [
@@ -42,6 +51,11 @@ const MarkdownToolbar = ({ onInsert }: MarkdownToolbarProps) => {
         setShowLanguageMenu(false);
     };
 
+    const handleNoteSelect = (type: string) => {
+        onInsert(`> [!${type}]\n> `, '');
+        setShowNoteMenu(false);
+    };
+
     const handleColorSelect = (color: string) => {
         onInsert(`<span style="color: ${color}">`, `</span>`);
         setShowColorMenu(false);
@@ -61,7 +75,7 @@ const MarkdownToolbar = ({ onInsert }: MarkdownToolbarProps) => {
         { icon: LinkIcon, label: 'Link', tooltip: 'Bağlantı', explanation: 'Tıklanabilir link ekler', description: '[başlık](url)', action: () => onInsert('[', '](url)') },
         { icon: Image, label: 'Image', tooltip: 'Görsel', explanation: 'Resim veya ekran görüntüsü ekler', description: '![açıklama](url)', action: () => onInsert('![alt text](', ')') },
         { icon: Quote, label: 'Quote', tooltip: 'Alıntı', explanation: 'Alıntı bloğu oluşturur', description: '> metin', action: () => onInsert('> ', '') },
-        { icon: StickyNote, label: 'Note', tooltip: 'Not / Uyarı', explanation: 'Bilgi veya uyarı kutusu ekler', description: '> [!NOTE]', action: () => onInsert('> [!NOTE]\n> ', '') },
+        // Note is now handled separately
         { icon: List, label: 'List', tooltip: 'Liste', explanation: 'Madde işaretli liste başlatır', description: '- öğe', action: () => onInsert('- ', '') },
         { icon: Minus, label: 'Separator', tooltip: 'Ayraç', explanation: 'Yatay ayırıcı çizgi ekler', description: '---', action: () => onInsert('\n---\n', '') },
     ];
@@ -70,16 +84,26 @@ const MarkdownToolbar = ({ onInsert }: MarkdownToolbarProps) => {
         setShowLanguageMenu(!showLanguageMenu);
         setShowColorMenu(false);
         setShowHeadingMenu(false);
+        setShowNoteMenu(false);
     }
 
     const toggleColorMenu = () => {
         setShowColorMenu(!showColorMenu);
         setShowLanguageMenu(false);
         setShowHeadingMenu(false);
+        setShowNoteMenu(false);
     }
 
     const toggleHeadingMenu = () => {
         setShowHeadingMenu(!showHeadingMenu);
+        setShowLanguageMenu(false);
+        setShowColorMenu(false);
+        setShowNoteMenu(false);
+    }
+
+    const toggleNoteMenu = () => {
+        setShowNoteMenu(!showNoteMenu);
+        setShowHeadingMenu(false);
         setShowLanguageMenu(false);
         setShowColorMenu(false);
     }
@@ -136,6 +160,49 @@ const MarkdownToolbar = ({ onInsert }: MarkdownToolbarProps) => {
                     </button>
                 </Tooltip>
             ))}
+
+            <div className="w-px h-6 bg-slate-300 dark:bg-slate-600 mx-1 flex-shrink-0" />
+
+            {/* Note/Alert Menu */}
+            <div className="relative">
+                <Tooltip content="Notlar & Uyarılar" description="> [!NOTE], > [!TIP]...">
+                    <button
+                        onClick={toggleNoteMenu}
+                        type="button"
+                        className={`p-2 flex items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-[#EA580C] dark:hover:text-[#FBBF24] hover:bg-[#FBBF24]/10 dark:hover:bg-[#FBBF24]/5 rounded-lg transition-colors ${showNoteMenu ? 'bg-[#FBBF24]/10 dark:bg-[#FBBF24]/5 text-[#EA580C]' : ''}`}
+                    >
+                        <StickyNote className="w-5 h-5" />
+                        <ChevronDown className="w-3 h-3" />
+                    </button>
+                </Tooltip>
+
+                {showNoteMenu && (
+                    <>
+                        <div
+                            className="fixed inset-0 z-10"
+                            onClick={() => setShowNoteMenu(false)}
+                        />
+                        <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-1 z-20">
+                            <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                Uyarı Tipi Seç
+                            </div>
+                            {alerts.map((alert) => (
+                                <button
+                                    key={alert.value}
+                                    onClick={() => handleNoteSelect(alert.value)}
+                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-[#FBBF24]/10 transition-colors flex items-center gap-2 group"
+                                >
+                                    <alert.icon className={`w-4 h-4 ${alert.color}`} />
+                                    <div className="flex flex-col">
+                                        <span className="font-semibold text-xs">{alert.name}</span>
+                                        <span className="text-[10px] text-slate-400">{alert.description}</span>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </>
+                )}
+            </div>
 
             <div className="w-px h-6 bg-slate-300 dark:bg-slate-600 mx-1 flex-shrink-0" />
 

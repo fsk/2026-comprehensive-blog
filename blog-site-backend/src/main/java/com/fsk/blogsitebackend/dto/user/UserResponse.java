@@ -1,12 +1,9 @@
-package com.fsk.blogsitebackend.dto;
-
-import java.util.UUID;
+package com.fsk.blogsitebackend.dto.user;
 
 import lombok.Data;
 
 @Data
 public class UserResponse {
-    private UUID id;
     private String username;
     private String email;
     private String firstName;

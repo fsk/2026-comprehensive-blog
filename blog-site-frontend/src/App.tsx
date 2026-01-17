@@ -5,10 +5,12 @@ import CreatePost from './pages/CreatePost';
 import EditPost from './pages/EditPost.tsx';
 import Register from './pages/Register';
 import Login from './pages/Login';
+import VerifyEmail from './pages/VerifyEmail';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import SocialMediaAdmin from './pages/SocialMediaAdmin';
 import CreateAnnouncement from './pages/CreateAnnouncement';
+import NotFound from './pages/NotFound';
 import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
@@ -25,10 +27,12 @@ function App() {
             <Route path="/admin/posts/:slug/edit" element={<EditPost />} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/admin/social-media" element={<SocialMediaAdmin />} />
             <Route path="/admin/announcement" element={<CreateAnnouncement />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster position="top-right" />
         </Router>

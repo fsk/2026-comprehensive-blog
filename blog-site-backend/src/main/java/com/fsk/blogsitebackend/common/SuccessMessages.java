@@ -67,6 +67,12 @@ public class SuccessMessages {
     public static final String REFERENCE_UPDATED = "Reference updated successfully";
     public static final String REFERENCE_DELETED = "Reference deleted successfully";
 
+    // Auth messages
+    public static final String AUTH_REGISTER_SUCCESS = "Registration successful. Please check your email to verify your account.";
+    public static final String EMAIL_VERIFIED = "Email verified successfully. You can now login.";
+    public static final String LOGIN_SUCCESS = "Login successful";
+    public static final String USER_DETAILS_RETRIEVED = "User details retrieved successfully";
+
     private SuccessMessages() {
         // Utility class - prevent instantiation
     }

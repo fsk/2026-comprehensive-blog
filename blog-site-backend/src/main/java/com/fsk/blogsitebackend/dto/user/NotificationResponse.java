@@ -1,4 +1,4 @@
-package com.fsk.blogsitebackend.dto;
+package com.fsk.blogsitebackend.dto.user;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

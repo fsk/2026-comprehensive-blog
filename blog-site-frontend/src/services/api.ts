@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { Post, PostListResponse, Comment, SocialMedia } from '../types';
+import toast from 'react-hot-toast';
 
 const API_URL = 'http://localhost:8079/api';
 
@@ -134,12 +135,127 @@ export const NotificationService = {
     }
 };
 
-// Mock current user for development (simulates auth)
+// Auth Types
+export interface LoginRequest {
+    username: string;
+    password: string;
+}
+
+export interface RegisterRequest {
+    username: string;
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    emailNotificationsEnabled: boolean;
+}
+
+export interface AuthResponse {
+    token: string;
+}
+
+// Token Management
+const getToken = (): string | null => localStorage.getItem('token');
+const setToken = (token: string) => localStorage.setItem('token', token);
+const removeToken = () => localStorage.removeItem('token');
+
+// Request Interceptor
+api.interceptors.request.use((config) => {
+    const token = getToken();
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
+// Response Interceptor
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        const message = error.response?.data?.message || error.response?.data?.error || "An unexpected error occurred";
+
+        if (error.response) {
+            if (error.response.status === 401) {
+                // Only redirect if not already on login page to avoid loops if login check fails
+                if (!window.location.pathname.includes('/login')) {
+                    toast.error("Session expired. Please login again.");
+                    removeToken();
+                    setCurrentUser(null);
+                    window.location.href = '/login';
+                }
+            } else if (error.response.status === 403) {
+                toast.error(message || "Access Denied");
+            } else if (error.response.status === 404) {
+                toast.error(message || "Resource not found");
+            } else {
+                toast.error(message);
+            }
+        } else {
+            toast.error("Network Error. Please check your connection.");
+        }
+        return Promise.reject(error);
+    }
+);
+
+// Auth Service
+export const AuthService = {
+    login: async (credentials: LoginRequest): Promise<CurrentUser> => {
+        const response = await api.post<GenericResponse<AuthResponse>>('/auth/login', credentials);
+        if (!response.data.success) {
+            throw new Error(response.data.error || 'Login failed');
+        }
+
+        const { token } = response.data.data;
+        setToken(token);
+
+        // Fetch user details immediately after login
+        return AuthService.getMe();
+    },
+
+    register: async (data: RegisterRequest): Promise<void> => {
+        const response = await api.post<GenericResponse<GenericResponse<any>>>('/auth/register', data);
+        if (!response.data.success) {
+            throw new Error(response.data.error || 'Registration failed');
+        }
+    },
+
+    verifyEmail: async (token: string): Promise<void> => {
+        const response = await api.get<GenericResponse<void>>(`/auth/verify-email?token=${token}`);
+        if (!response.data.success) {
+            throw new Error(response.data.error || 'Verification failed');
+        }
+    },
+
+    getMe: async (): Promise<CurrentUser> => {
+        const response = await api.get<GenericResponse<CurrentUser>>('/auth/me');
+        if (!response.data.success) {
+            throw new Error(response.data.error || 'Failed to fetch user details');
+        }
+        const user = response.data.data;
+        setCurrentUser(user);
+        return user;
+    },
+
+    logout: () => {
+        removeToken();
+        setCurrentUser(null);
+        window.location.href = '/login';
+    },
+
+    isAuthenticated: (): boolean => !!getToken(),
+    getToken: getToken
+};
+
+
+// User Management (Local Storage Helper)
 export const getCurrentUser = (): CurrentUser | null => {
-    // For development: store user in localStorage
     const stored = localStorage.getItem('currentUser');
     if (stored) {
-        return JSON.parse(stored);
+        try {
+            return JSON.parse(stored);
+        } catch (e) {
+            return null;
+        }
     }
     return null;
 };

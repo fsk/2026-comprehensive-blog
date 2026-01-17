@@ -90,6 +90,13 @@ public class ErrorMessages {
     public static final String REQUIRED_FIELD_MISSING = "Required field is missing";
     public static final String INVALID_INPUT = "Invalid input provided";
 
+    // Security errors
+    public static final String ACCESS_DENIED_TITLE = "Access Denied";
+    public static final String ACCESS_DENIED_DETAIL = "Access is denied";
+    public static final String AUTH_FAILED_TITLE = "Authentication Failed";
+    public static final String AUTH_FAILED_DETAIL = "Full authentication is required to access this resource";
+    public static final String USER_ALREADY_EXISTS = "User already exists";
+
     private ErrorMessages() {
         // Utility class - prevent instantiation
     }

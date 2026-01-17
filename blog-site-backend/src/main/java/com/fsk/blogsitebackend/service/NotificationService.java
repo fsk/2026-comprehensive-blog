@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fsk.blogsitebackend.common.exception.ResourceNotFoundException;
-import com.fsk.blogsitebackend.dto.NotificationResponse;
+import com.fsk.blogsitebackend.dto.user.NotificationResponse;
 import com.fsk.blogsitebackend.entities.Notification;
 import com.fsk.blogsitebackend.entities.Notification.NotificationType;
 import com.fsk.blogsitebackend.entities.User;
