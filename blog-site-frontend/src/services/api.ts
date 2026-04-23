@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { Post, PostListResponse, Comment, SocialMedia } from '../types';
 import toast from 'react-hot-toast';
 
-const API_URL = 'http://localhost:8079/api';
+const API_URL = 'http://localhost:8080/api';
 
 export interface CreatePostRequest {
     title: string;

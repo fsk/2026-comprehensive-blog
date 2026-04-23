@@ -2,6 +2,8 @@ package com.fsk.blogsitebackend.common.exception;
 
 import java.util.stream.Collectors;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -15,9 +17,23 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.fsk.blogsitebackend.common.ErrorMessages;
 import com.fsk.blogsitebackend.common.GenericResponse;
 import com.fsk.blogsitebackend.common.ResponseUtil;
+import lombok.extern.slf4j.Slf4j;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<GenericResponse<Void>> handleExpiredJwtException(ExpiredJwtException e) {
+        log.warn("Expired JWT token", e);
+        return ResponseUtil.errorResponse("JWT token has expired", ErrorMessages.AUTH_FAILED_DETAIL, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<GenericResponse<Void>> handleJwtException(JwtException e) {
+        log.warn("Invalid JWT token", e);
+        return ResponseUtil.errorResponse("Invalid JWT token", ErrorMessages.AUTH_FAILED_DETAIL, HttpStatus.UNAUTHORIZED);
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<GenericResponse<Void>> handleResourceNotFoundException(ResourceNotFoundException e) {
@@ -43,6 +59,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<GenericResponse<Void>> handleRuntimeException(RuntimeException e) {
+        log.error("Unhandled runtime exception", e);
         return ResponseUtil.errorResponse(e.getMessage(), ErrorMessages.RUNTIME_ERROR,
                 HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -110,18 +127,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
     public ResponseEntity<GenericResponse<Void>> handleAuthenticationException(
             org.springframework.security.core.AuthenticationException e) {
+        log.warn("Authentication failed", e);
         return ResponseUtil.errorResponse(ErrorMessages.AUTH_FAILED_TITLE,
                 ErrorMessages.AUTH_FAILED_DETAIL, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<GenericResponse<Void>> handleDataAccessException(DataAccessException e) {
+        log.error("Database access error", e);
         return ResponseUtil.errorResponse(e.getMessage(), ErrorMessages.DATABASE_ACCESS_ERROR,
                 HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<GenericResponse<Void>> handleGenericException(Exception e) {
+        log.error("Unhandled exception", e);
         return ResponseUtil.errorResponse(e.getMessage(), ErrorMessages.UNEXPECTED_ERROR,
                 HttpStatus.INTERNAL_SERVER_ERROR);
     }
