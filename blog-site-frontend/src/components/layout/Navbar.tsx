@@ -56,6 +56,7 @@ const Navbar = () => {
         { name: 'Yazılar', path: '/' },
         { name: 'Hakkımda', path: '/about' },
         { name: 'İletişim', path: '/contact' },
+        { name: 'Randevu', path: '/booking' },
     ];
 
     const hoverUnderlineClass = "relative after:absolute after:bottom-0 after:left-0 after:h-[3px] after:bg-gradient-to-r after:from-[#EA580C] after:to-[#FBBF24] after:transition-all after:duration-300";

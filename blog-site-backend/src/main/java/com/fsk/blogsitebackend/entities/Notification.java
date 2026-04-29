@@ -40,6 +40,7 @@ public class Notification extends BaseEntity {
     public enum NotificationType {
         MENTION, // Bir yorumda mention edildiğinde
         NEW_POST, // Yeni blog post yayınlandığında (email pref true ise)
-        REPLY // Yoruma cevap geldiğinde
+        REPLY, // Yoruma cevap geldiğinde
+        BOOKING_REQUEST // Yeni rezervasyon geldiğinde
     }
 }

@@ -38,7 +38,12 @@ public class SecurityConfig {
                                 "/categories/**",
                                 "/tags/**",
                                 "/about/**",
-                                "/social-media")
+                                "/social-media",
+                                "/calendar/public/**")
+                        .permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST,
+                                "/bookings/public",
+                                "/payments/public/**")
                         .permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/api-docs/**", "/swagger-ui/**").permitAll()

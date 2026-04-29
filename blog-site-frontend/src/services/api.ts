@@ -22,6 +22,44 @@ export interface CreateCommentRequest {
     parentId?: string;
 }
 
+export interface AvailabilitySlot {
+    id: string;
+    startAt: string;
+    endAt: string;
+    price: number;
+    currency: string;
+}
+
+export interface CreateBookingRequest {
+    slotId: string;
+    name: string;
+    email: string;
+    title: string;
+    description: string;
+}
+
+export interface BookingResponse {
+    id: string;
+    slotId: string;
+    startAt: string;
+    endAt: string;
+    clientName: string;
+    clientEmail: string;
+    title: string;
+    description: string;
+    status: 'PENDING_PAYMENT' | 'PAID' | 'CANCELLED';
+    amount: number;
+    currency: string;
+    paymentReference?: string;
+    createdAt: string;
+}
+
+export interface PaymentCheckoutResponse {
+    bookingId: string;
+    paymentReference: string;
+    paymentUrl: string;
+}
+
 // Backend GenericResponse wrapper type
 interface GenericResponse<T> {
     success: boolean;  // Backend serializes 'isSuccess' as 'success' due to Lombok getter naming
@@ -428,6 +466,34 @@ export const SocialMediaService = {
         // For now, let's just make it return resolve so generic usage doesn't crash, or remove it.
         // Removing it is cleaner, but components using it will break. I'll remove it and fix component.
         return Promise.resolve();
+    }
+};
+
+export const BookingCalendarService = {
+    getAvailability: async (from: string, to: string): Promise<AvailabilitySlot[]> => {
+        const response = await api.get<GenericResponse<AvailabilitySlot[]>>('/calendar/public/availability', {
+            params: { from, to }
+        });
+        if (!response.data.success) {
+            throw new Error(response.data.error || 'Uygun saatler alinamadi');
+        }
+        return response.data.data;
+    },
+
+    createBooking: async (payload: CreateBookingRequest): Promise<BookingResponse> => {
+        const response = await api.post<GenericResponse<BookingResponse>>('/bookings/public', payload);
+        if (!response.data.success) {
+            throw new Error(response.data.error || 'Rezervasyon olusturulamadi');
+        }
+        return response.data.data;
+    },
+
+    createCheckout: async (bookingId: string): Promise<PaymentCheckoutResponse> => {
+        const response = await api.post<GenericResponse<PaymentCheckoutResponse>>(`/payments/public/checkout/${bookingId}`);
+        if (!response.data.success) {
+            throw new Error(response.data.error || 'Odeme baslatilamadi');
+        }
+        return response.data.data;
     }
 };
 

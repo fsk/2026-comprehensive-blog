@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import VerifyEmail from './pages/VerifyEmail';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import Booking from './pages/Booking';
 import SocialMediaAdmin from './pages/SocialMediaAdmin';
 import CreateAnnouncement from './pages/CreateAnnouncement';
 import NotFound from './pages/NotFound';
@@ -30,6 +31,7 @@ function App() {
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/booking" element={<Booking />} />
             <Route path="/admin/social-media" element={<SocialMediaAdmin />} />
             <Route path="/admin/announcement" element={<CreateAnnouncement />} />
             <Route path="*" element={<NotFound />} />

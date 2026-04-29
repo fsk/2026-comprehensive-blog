@@ -111,7 +111,7 @@ export interface PostListResponse {
 
 export interface Notification {
     id: string;
-    type: 'MENTION' | 'NEW_POST' | 'REPLY';
+    type: 'MENTION' | 'NEW_POST' | 'REPLY' | 'BOOKING_REQUEST';
     message: string;
     isRead: boolean;
     relatedPostSlug?: string;
